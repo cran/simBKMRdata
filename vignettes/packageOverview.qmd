@@ -1,0 +1,287 @@
+---
+title: "Helper Functions for Bayesian Kernel Machine Regression"
+subtitle: "Simulating Multivariate Environmental Exposure Data and Estimating Feature Selection Thresholds"
+date: "2025-04-07"
+author: "Kazi Tanvir Hasan and Gabriel J. Odom"
+output:
+  rmarkdown::html_document:
+    toc: true
+    toc_depth: 2
+vignette: >
+  %\VignetteIndexEntry{simBKMR R Package}
+  %\VignetteEngine{quarto::html}
+  %\VignetteLanguage{en}
+bibliography: references.bib
+---
+
+
+
+
+# Abstract
+
+In environmental health studies, the relationship between multiple environmental exposures and health outcomes, such as cognitive development, is often investigated using complex datasets that exhibit non-normality. This paper introduces an R package designed to simulate multivariate environmental exposure data and estimate feature selection thresholds to aid in research to apply and extend the Bayesian Kernel Machine Regression (BKMR) methodology. The package enables researchers to generate data from multivariate normal and multivariate skewed Gamma distributions, common in environmental exposure research, and calculate multivariate statistical features such as mean, variance, skewness, shape, and rate vectors, and correlation matrices. This package also facilitates the calculation of a Posterior Inclusion Probability (PIP) threshold for feature selection in BKMR, offering an approach that accounts for non-normal data (based on the forthcoming work of Hasan, Odom, Bursac, Lucchini, and Ibrahimou). The effectiveness of the package is demonstrated through a real-world application using data from an adolescent environmental exposure study, where metal exposures are related to IQ scores.
+
+
+
+## Keywords
+
+R package, Bayesian Kernel Machine Regression, multivariate simulation, feature selection, environmental exposure, statistical moments, multivariate Gamma distribution, skewed data
+
+
+
+
+# Introduction
+
+Environmental exposure to metals such as Cadmium, Mercury, Arsenic, and Lead is linked to various adverse health outcomes, especially among children [@Horton2013]. In particular, these exposures may influence cognitive functions, with effects that often vary based on the concentration of metals in the environment [@Sanders2015; @trasande2011; @tyler2014; @tolins2014]. Research into these relationships frequently involves complex, multivariate datasets where environmental factors are correlated, and data distributions often exhibit skewness rather than normality [@bobb2014; @bobb2018; @hasan2024].
+
+The Bayesian Kernel Machine Regression (BKMR) model is a powerful method for identifying relevant environmental factors and interactions [@bobb2014; @bobb2018; @wilson2022; @devick2022; @gerwinn2010; @ibrahimou2024]. However, its effectiveness is typically constrained by its assumption of normality in the data, which is frequently violated in environmental health studies [@bobb2014; @bobb2018; @hasan2024; @Van2021]. To allow BKMR to flexibly handle multivariate skewed data, ongoing methodological innovation is needed, and synthetic data sets are a critical component of this research. To fill this need for realistic synthetic data sets, we have developed an R package that facilitates parametric bootstrap data simulation for multivariate environmental exposures. Further, this package includes computational results to estimate a Posterior Inclusion Probability (PIP) threshold which enables feature selection for BKMR via a hypothesis testing framework with controlled test size, which is particularly useful when data deviate from multivariate normality [@hasan2024]. In this chapter, we show how to estimate key statistical moments from a real data set which includes effects of metals exposures on children's IQ scores. Then, to facilitate future methodological innovation, we show how to use these moments as parameter estimates to simulate multiple synthetic environmental exposure data sets from multivariate normal and multivariate (skewed) Gamma distributions. Also, for the real data analysis, we show how to apply our threshold equation to use BKMR results for feature selection.
+
+
+
+
+# Materials and Methods
+
+
+
+## Overview of the R Package
+
+The package aims to provide a robust framework for simulating non-normal environmental exposure data and estimating feature selection thresholds in the context of Bayesian Kernel Machine Regression (BKMR). The core functions of the package include:
+
+1.  Data Simulation: Functions for generating multivariate data from Normal, Gamma, and skewed Gamma distributions.
+
+-   `simulate_group_data()`: Generates data using multivariate normal or Gamma distributions.
+
+2.  Statistical Parameters Estimation: The function `calculate_stats_gaussian()` calculates key statistical moments, including mean, variance, skewness, and correlation matrix, which are essential for understanding the underlying structure of the normally distributed data. The function `calculate_stats_gamma()` computes the sample size, gamma distribution parameters (shape and rate), and Spearman correlation matrix for each group, based on the grouping column.
+
+3.  Feature Selection Threshold Calculation: The PIP threshold for feature selection is computed using the `calculate_pip_threshold()` function. This function estimates the threshold based on a Four-Parameter Logistic Regression model (Richard's curve), which adjusts for variations in data and sample size[@richards1959]. The formula used to calculate the PIP threshold is:
+
+```{=tex}
+\begin{equation}
+y = A + \frac{K - A}{\left( C + e^{-\beta_1 x_1} \right)^{\beta_2 x_2}},\label{eq1}
+\end{equation}
+```
+Where:
+
+• y: the 95th percentile of the PIP values $PIP_{q_{95}}$
+
+• A: Left asymptote, fixed at 0.
+
+• K: Right asymptote, bounded above by 1.
+
+• C: Constant.
+
+• $\beta_1, \beta_2$: Midpoint shift parameters for CV and sample size.
+
+• x1: Log-transformed CV $log_2 (\text{CV})$.
+
+• x2: Log-transformed sample size $log_{10} (\text{Sample Size})$.
+
+A dynamic threshold function was derived from the logistic model to adjust thresholds based on CV and sample size.
+
+```{=tex}
+\begin{equation}
+    \text{Threshold} = \frac{1}{\left( C + e^{-\beta_1 \log_2 (\text{CV})} \right)^{\beta_2 \log_{10} (\text{SampleSize})}}
+\end{equation}
+```
+4.  Data Transformation Functions
+
+The package includes data transformation functions to prepare data for analysis:
+
+• Scaling by Standard Deviation or MAD: The `trans_ratio()` function scales data by either the standard deviation (SD) or the median absolute deviation (MAD).
+
+• Logarithmic and Root Transformations: The `trans_log()` function applies a logarithmic transformation to the data, and the `trans_root()` function allows for fractional root transformations, helping to manage skewed data.
+
+
+
+## Software Implementation
+
+The simBKMRdata software is implemented as an R package. It depends on the following packages: bkmr[@bkmr], fields[@fields], base[@base] and MASS[@MASS]. The R software and these required packages can be obtained from the CRAN website. Furthermore, daily builds of package simBKMRdata are provided on the CRAN website \[.....\]. It has been published under GPL version 3. The source code is available on GitHub at \[https://github.com/khasa006/simBKMRdata\].
+
+### Installation
+
+To install the package from CRAN, use:
+
+```{r}
+# install.packages("simBKMRdata")
+```
+
+For GitHub installation, use:
+
+```{r}
+# devtools::install_github("simBKMRdata")
+```
+
+### Example Usage 
+
+#### Data Exploration
+
+```{r}
+library(simBKMRdata)
+library(tidyverse)
+
+# Load the dataset
+data("metalExposChildren_df")
+
+
+analysisData_df <- metalExposChildren_df %>%
+  select(QI, Cadmium:Manganese, Sex)
+
+head(analysisData_df)
+
+# Create a histogram with density plot for each metal
+variablePlot <- analysisData_df %>%
+  select(Cadmium:Manganese) %>%
+  pivot_longer(cols = everything(), names_to = "Metal", values_to = "Value") %>%
+  ggplot(aes(x = Value, fill = Metal)) + 
+  geom_histogram(aes(y = ..density..), bins = 30, alpha = 0.5, position = "identity") + 
+  geom_density(aes(color = Metal), linewidth = 1) + 
+  facet_wrap(~Metal, scales = "free") + 
+  theme_minimal() + 
+  labs(title = "Histogram with Density Plot for Metals", 
+       x = "Concentration", 
+       y = "Density") + 
+  theme(legend.position = "none")
+```
+
+### Parameter Estimation
+
+```{r}
+param_list <- calculate_stats_gamma(
+  data_df = analysisData_df, 
+  group_col= "Sex", 
+  using = "MoM"
+)
+
+param_list
+```
+
+#### Data Simulation 
+
+```{r}
+gamma_samples <- simulate_group_data(
+  param_list = param_list, 
+  data_gen_fn = generate_mvGamma_data, 
+  group_col_name = "Sex"
+)
+
+head(gamma_samples)
+```
+### BKMR Analysis
+
+```{r}
+#| label: run-bkmr
+library(bkmr)
+
+set.seed(2025)
+
+bkmrAnalysisData_df <- analysisData_df %>%
+  na.omit() %>%
+  mutate_at(
+    vars(Cadmium:Manganese), ~ log10(. + 1) %>% as.vector
+  )
+
+
+# Extract the response variable (IQ) and the exposure matrix (metals)
+iq <- bkmrAnalysisData_df %>% 
+  pull(QI) %>% 
+  na.omit()
+
+expos <- bkmrAnalysisData_df %>%
+  select(Cadmium:Manganese) %>% 
+  data.matrix()
+
+# Generate knot points using a cover design for Bayesian modeling
+knots50 <- fields::cover.design(expos, nd = 50)$design
+
+# Fit the BKMR model using MCMC
+modelFit <- kmbayes(
+  y = iq,         # Response variable
+  Z = expos,      # Exposure matrix (metal concentrations)
+  X = NULL,       # No additional covariates
+  iter = 2000,    # Number of MCMC iterations
+  family = "gaussian",  # Gaussian response
+  verbose = TRUE,       # Output progress for each iteration
+  varsel = TRUE,       # Perform variable selection
+  knots = knots50      # Knot points generated earlier
+)
+
+# Extract posterior inclusion probabilities (PIPs) and sort them
+pipFit <- ExtractPIPs(modelFit) %>% arrange(desc(PIP))
+```
+
+#### Dynamic Threshold Calculation
+
+```{r}
+pipThresh_num <- calculate_pip_threshold(y = bkmrAnalysisData_df$QI)
+```
+
+
+
+
+# Result
+
+
+
+## Exploratory Data Analysis
+
+We began by examining the real-world environmental exposure dataset derived from the cohort study led by Dr. Lucchini and colleagues. The dataset comprises measurements of five key metal concentrations — Cadmium, Mercury, Arsenic, Lead, and Manganese—in children, along with corresponding intelligence quotient (IQ) scores. Visualization of the marginal distributions of these metal concentrations using histograms and kernel density plots (Figure 1) revealed marked right-skewness across all analytes, suggesting the need for distribution-sensitive modeling approaches.
+
+```{r}
+#| echo=FALSE
+variablePlot
+```
+
+## Parameter Estimation from Real Data
+
+To capture the empirical distributional features of the observed data, we implemented the `calculate_stats_gamma()` function to estimate parameters for Gamma distributions within male and female subgroups. This method-of-moments approach yielded group-specific descriptors, including sample sizes, means, Gamma shape and rate parameters, and Spearman correlation matrices among the metals. These parameters served as foundational elements for generating realistic synthetic data that preserve sex-specific distribution and correlation structures of the environmental exposures.
+
+
+
+## Simulation of Multivariate Gamma Data
+
+With the estimated parameters, we used the `simulate_group_data()` function to generate synthetic multivariate Gamma-distributed exposure data. This function internally called `generate_mvGamma_data()` and produced group-labeled datasets that preserved the distributional properties of the original data. The simulated data maintained inter-variable correlations and group-specific skewness patterns, effectively replicating real-world exposure profiles.
+
+
+
+## Bayesian Kernel Machine Regression (BKMR) Analysis
+
+To assess the relationship between metal exposures and cognitive outcomes, we employed Bayesian Kernel Machine Regression (BKMR) using the kmbayes() function from the bkmr package. Prior to analysis, we omit the missing values and the metal concentration variables were log-transformed using the `trans_log()` function to mitigate skewness. The exposure matrix thus comprised log-transformed values of the five metals, with IQ as the continuous outcome variable.
+
+The BKMR model was fit with 2,000 MCMC iterations, allowing for variable selection via computation of Posterior Inclusion Probabilities (PIPs). Extraction and ranking of PIPs, conducted using the `ExtractPIPs()` function, revealed that Cadmium and Lead were among the most influential predictors of IQ variability, as indicated by elevated PIP values (Table 1).
+
+Table 1. Posterior Inclusion Probabilities (PIPs) for Metal Exposures
+
+```{r}
+#| echo=FALSE
+library(gt)
+
+pipFit %>%
+  gt() %>%
+  tab_header(
+    title = "Posterior Inclusion Probabilities (PIPs)"
+  )
+```
+
+Notably, Cadmium and Lead emerged as likely key contributors to cognitive development outcomes. However, determining which PIP values were statistically meaningful required the use of a calibrated, data-driven threshold.
+
+To address the challenge of determining meaningful PIP thresholds under skewed data conditions, we applied the `calculate_pip_threshold()` function. This function dynamically estimates a threshold based on the dataset’s coefficient of variation (CV) and sample size using a Four-Parameter Logistic Regression model.
+
+For the current dataset, the computed threshold value was `r pipThresh_num`. This threshold adapts to sample characteristics and adjusts the selection criterion accordingly, making it especially suitable for non-normal data distributions.
+
+By comparing each metal’s PIP against the calculated threshold, we identified a refined subset of significant exposures, which included not only cadmium and lead but also manganese and mercury. This approach allows for a statistically principled method of feature selection within the BKMR framework, ensuring robust and interpretable results even when the data deviate from normality.
+
+
+
+
+# Discussion
+
+The R package we developed is a valuable tool for simulating multivariate environmental exposure data and estimating feature selection thresholds for Bayesian Kernel Machine Regression (BKMR). By supporting multivariate normal and skewed Gamma distributions, the package is particularly well-suited for handling non-normal environmental exposure data, which is common in health studies.
+
+While BKMR is an excellent tool for feature selection, its reliance on normality can limit its application to real-world datasets. Our package fills this gap by enabling researchers to model and analyze non-normally distributed data, ensuring that feature selection remains robust even in complex scenarios.
+
+
+
+
+# Conclusion
+
+This R package provides essential tools for simulating multivariate environmental exposure data, estimating statistical moments, and calculating PIP thresholds for feature selection in Bayesian Kernel Machine Regression (BKMR). The ability to simulate data from multivariate normal and skewed Gamma distributions makes the package particularly valuable for environmental health studies where data often deviate from normality.

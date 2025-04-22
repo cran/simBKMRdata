@@ -1,0 +1,169 @@
+---
+title: "Vignette: Bayesian Kernel Machine Regression (BKMR) for Metal Exposure Analysis with Dynamic Threshold Function"
+author: "Kazi Tanvir Hasan and Dr. Gabriel Odom"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 2
+vignette: >
+  %\VignetteIndexEntry{Calculate PIP Threshold from Response Vector}
+  %\VignetteEngine{quarto::html}
+  %\VignetteLanguage{en}
+---
+
+
+
+# Introduction
+In this vignette, we demonstrate how to use the bkmr package in R to analyze the relationship between metal exposures (e.g., Cadmium, Mercury, Arsenic, Lead, and Manganese) and a response variable (e.g., IQ score or QI). Additionally, we will compute a dynamic threshold for model inclusion based on the coefficient of variation and the sample size.
+
+
+## 1. Required Libraries
+Before starting, ensure the following libraries are installed and loaded:
+
+```{r}
+# Load the necessary libraries
+library(bkmr)
+library(simBKMRdata)
+library(tidyverse)
+```
+
+## 2. Data Preprocessing
+First, we load the data, clean it, and perform any necessary transformations. In this case, we take the log-transformation of the metal concentrations to ensure they are on a comparable scale.
+
+```{r}
+# Set the seed for reproducibility
+set.seed(2025)
+
+# Load the dataset and preprocess
+data("metalExposChildren_df")
+
+bkmrAnalysisData_df <- 
+  metalExposChildren_df %>%
+  select(QI, Cadmium:Manganese) %>%  # Selecting relevant columns
+  na.omit() %>%  # Remove rows with missing values
+  mutate_at(
+    vars(Cadmium:Manganese), ~ log10(. + 1) %>% as.vector
+  )  # Log-transform metal concentrations
+```
+
+Here, `mutate_at` is used to log-transform the exposure variables (Cadmium to Manganese) by applying `log10(. + 1)`.
+
+
+## 3. Exploratory Data Analysis (EDA)
+Before fitting the model, we perform some exploratory data analysis. We visualize the distribution of metal concentrations using histograms and density plots.
+
+```{r}
+# Create a histogram with density plot for each metal
+metalDataPlot <- bkmrAnalysisData_df %>%
+  select(Cadmium:Manganese) %>%
+  pivot_longer(cols = everything(), names_to = "Metal", values_to = "Value") %>%
+  ggplot(aes(x = Value, fill = Metal)) + 
+  geom_histogram(aes(y = ..density..), bins = 30, alpha = 0.5, position = "identity") + 
+  geom_density(aes(color = Metal), linewidth = 1) + 
+  facet_wrap(~Metal, scales = "free") + 
+  theme_minimal() + 
+  labs(title = "Histogram with Density Plot for Metals", 
+       x = "Concentration", 
+       y = "Density") + 
+  theme(legend.position = "none")
+
+# Display the plot
+metalDataPlot
+```
+
+This plot provides a visual understanding of how the metal concentrations are distributed.
+
+
+## 4. Model Setup
+We now set up the Bayesian Kernel Machine Regression (BKMR) model by creating a response variable (QI) and the exposure matrix, which includes all the metal concentrations.
+
+```{r}
+# Extract the response variable (IQ score or QI)
+iq <- bkmrAnalysisData_df %>%
+  pull(QI) %>%
+  na.omit()
+
+# Convert exposure variables (metals) to a matrix for modeling
+expos <- data.matrix(bkmrAnalysisData_df %>% select(Cadmium:Manganese))
+```
+
+
+## 5. Generating Knot Points for the Model
+To fit the Bayesian Kernel Machine Regression model, we generate knot points using the cover.design function. These points will be used for the MCMC model.
+
+```{r}
+# Generate knot points using a cover design for Bayesian modeling
+knots50 <- fields::cover.design(expos, nd = 50)$design
+```
+
+Here, we specify 50 knots for the cover design. These knot points help in fitting the non-linear kernel in BKMR.
+
+
+## 6. Fitting the BKMR Model
+We now fit the BKMR model using the kmbayes() function. This function performs Bayesian regression using MCMC (Markov Chain Monte Carlo) to estimate the relationship between the exposures and the response variable.
+
+```{r}
+#| label: run-BKMR-MCMC
+# Fit the BKMR model using MCMC
+modelFit <- kmbayes(
+  y = iq,         # Response variable
+  Z = expos,      # Exposure matrix (metal concentrations)
+  X = NULL,       # No additional covariates
+  iter = 1000,    # Number of MCMC iterations
+  family = "gaussian",  # Gaussian response
+  verbose = TRUE,       # Output progress for each iteration
+  varsel = TRUE,       # Perform variable selection
+  knots = knots50      # Knot points generated earlier
+)
+```
+
+
+## 7. Extracting Results
+After the model is fitted, we extract the posterior inclusion probabilities (PIPs) to determine which exposures are most important in predicting the response variable.
+
+```{r}
+# Extract posterior inclusion probabilities (PIPs) and sort them
+pipFit <- ExtractPIPs(modelFit) %>%
+  arrange(desc(PIP))
+
+# Display the PIPs
+pipFit
+```
+
+The `ExtractPIPs()` function returns the posterior inclusion probabilities, which are then sorted in descending order to identify the most important exposures.
+
+8. Dynamic Threshold Calculation
+Next, we calculate the dynamic threshold for model inclusion. This threshold is based on the coefficient of variation (CV) of the response variable (QI) and the sample size.
+
+```{r}
+# Calculate the dynamic threshold for model inclusion
+pipThresh_fn <- calculate_pip_threshold(
+  absCV = sd(bkmrAnalysisData_df$QI) / mean(bkmrAnalysisData_df$QI),  # Coefficient of variation
+  sampSize = length(bkmrAnalysisData_df$QI)  # Sample size
+)
+
+# Display the threshold
+pipThresh_fn
+```
+
+This function computes the threshold for the PIPs using the coefficient of variation of the response variable and the sample size.
+
+
+## 9. Interpretation of Results
+Finally, we compare the PIPs with the threshold to identify the variables (metals) that have a significant effect on the response variable.
+
+```{r}
+# Identify exposures with PIPs greater than the threshold
+significant_exposures <- pipFit %>%
+  filter(PIP > pipThresh_fn)
+
+# Display significant exposures
+significant_exposures
+```
+
+This step filters the exposures whose posterior inclusion probabilities exceed the dynamic threshold, indicating that these variables are significant predictors of the outcome.
+
+
+
+# Conclusion
+This vignette demonstrates the complete workflow for using Bayesian Kernel Machine Regression (BKMR) to analyze the relationship between various metal exposures and an outcome of interest (e.g., IQ score). Additionally, we computed a dynamic threshold for model inclusion, which adjusts the threshold based on the coefficient of variation and the sample size.
