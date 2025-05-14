@@ -54,8 +54,8 @@
 calculate_pip_threshold <- function(
     y, absCV, sampSize,
     coeffs_ls = list(
-      A = 0, K = 1.43462, C = 1.59948,
-      betaAbsCV = 0.56615, betaSampSize = 0.51345
+      A = 0, K = 1, C = 1.30460,
+      betaAbsCV = 0.59867, betaSampSize = 0.43565
     ),
     na.rm = TRUE
   ){

@@ -1,14 +1,20 @@
 Package: simBKMRdata
 Title: Helper Functions for Bayesian Kernel Machine Regression
-Version: 0.1.1
+Version: 0.2.1
 Authors@R: 
     c(
       person("Kazi Tanvir", "Hasan", , "khasa006@fiu.edu", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-7723-4177")),
+      person("Ibrahimou", "Boubakari", , "bibrahim@fiu.edu", role = "aut",
+           comment = c(ORCID = "0000-0003-3173-4317")),
+      person("Guerini", "Cristian", , "cristian.guerini@unibs.it", role = "aut",
+      comment = c(ORCID = "0009-0004-4480-5182")),
+      person("Bursac", "Zoran", , "zbursac@fiu.edu", role = "aut",
+           comment = c(ORCID = "0000-0001-9306-0907")),
+      person("Roberto", "Lucchini", , "rlucchin@fiu.edu", role = "aut",
+           comment = c(ORCID = "0000-0002-9723-0237")),
       person("Gabriel", "Odom", , "gabriel.j.odom@gmail.com", role = "aut",
-           comment = c(ORCID = "0000-0003-1341-4555")),
-      person("Roberto", "Lucchini", , "rlucchin@fiu.edu", role = "ctb",
-           comment = c(ORCID = "0000-0002-9723-0237"))
+           comment = c(ORCID = "0000-0003-1341-4555"))
     )
 Description: Provides a suite of helper functions to support Bayesian Kernel 
     Machine Regression (BKMR) analyses in environmental health research. It 
@@ -29,10 +35,15 @@ Depends: R (>= 3.5)
 LazyData: true
 Config/testthat/edition: 3
 NeedsCompilation: no
-Packaged: 2025-04-17 18:50:33 UTC; tanvir
-Author: Kazi Tanvir Hasan [aut, cre] (<https://orcid.org/0000-0002-7723-4177>),
-  Gabriel Odom [aut] (<https://orcid.org/0000-0003-1341-4555>),
-  Roberto Lucchini [ctb] (<https://orcid.org/0000-0002-9723-0237>)
+Packaged: 2025-05-14 17:30:03 UTC; tanvirhasan
+Author: Kazi Tanvir Hasan [aut, cre] (ORCID:
+    <https://orcid.org/0000-0002-7723-4177>),
+  Ibrahimou Boubakari [aut] (ORCID:
+    <https://orcid.org/0000-0003-3173-4317>),
+  Guerini Cristian [aut] (ORCID: <https://orcid.org/0009-0004-4480-5182>),
+  Bursac Zoran [aut] (ORCID: <https://orcid.org/0000-0001-9306-0907>),
+  Roberto Lucchini [aut] (ORCID: <https://orcid.org/0000-0002-9723-0237>),
+  Gabriel Odom [aut] (ORCID: <https://orcid.org/0000-0003-1341-4555>)
 Maintainer: Kazi Tanvir Hasan <khasa006@fiu.edu>
 Repository: CRAN
-Date/Publication: 2025-04-22 13:40:04 UTC
+Date/Publication: 2025-05-14 18:20:02 UTC
