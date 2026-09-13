@@ -8,7 +8,10 @@
 #' parameters for a group (mean, shape, rate, etc.). The list must be named with
 #' group names that match the groupings stated in `group_col_name`.
 #' @param data_gen_fn A function for data generation. Currently we can choose
-#' either `generate_mvGamma_data` or `MASS::mvrnorm`.
+#' either `generate_mvGamma_data` or `MASS::mvrnorm`. For the Gaussian path,
+#' `sampCorr_mat` is passed directly to the `Sigma` argument of
+#' `MASS::mvrnorm()`; a correlation matrix therefore corresponds to unit
+#' marginal variances.
 #' @param group_col_name The name of the grouping/label column to be created in
 #' the final data frame.
 #'

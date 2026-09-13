@@ -10,7 +10,11 @@ simulate_group_gaussian(param_list, group_col_name)
 \item{param_list}{A list of named sublists, where each sublist contains the
 parameters for a group (sample size, mean, standard deviation, and
 correlation matrix). The dimension of the parameters for each group must be
-the same.}
+the same. \code{sampCorr_mat} is passed directly to \code{MASS::mvrnorm()} as its
+\code{Sigma} argument; therefore, when it is a correlation matrix, the generated
+Gaussian variables have unit marginal variances. \code{sampSD} is retained in
+the parameter object for compatibility with \code{calculate_stats_gaussian()} but
+is not used to rescale the Gaussian draws.}
 
 \item{group_col_name}{The column name of the grouping/label column to be
 created in the final data frame. The values are taken from the names of the

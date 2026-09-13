@@ -8,7 +8,11 @@
 #' @param param_list A list of named sublists, where each sublist contains the
 #' parameters for a group (sample size, mean, standard deviation, and
 #' correlation matrix). The dimension of the parameters for each group must be
-#' the same.
+#' the same. `sampCorr_mat` is passed directly to `MASS::mvrnorm()` as its
+#' `Sigma` argument; therefore, when it is a correlation matrix, the generated
+#' Gaussian variables have unit marginal variances. `sampSD` is retained in
+#' the parameter object for compatibility with `calculate_stats_gaussian()` but
+#' is not used to rescale the Gaussian draws.
 #' @param group_col_name The column name of the grouping/label column to be
 #' created in the final data frame. The values are taken from the names of the
 #' sublists of `param_list`. Defaults to "group". See the example below.

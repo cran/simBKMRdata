@@ -12,7 +12,10 @@ parameters for a group (mean, shape, rate, etc.). The list must be named with
 group names that match the groupings stated in \code{group_col_name}.}
 
 \item{data_gen_fn}{A function for data generation. Currently we can choose
-either \code{generate_mvGamma_data} or \code{MASS::mvrnorm}.}
+either \code{generate_mvGamma_data} or \code{MASS::mvrnorm}. For the Gaussian path,
+\code{sampCorr_mat} is passed directly to the \code{Sigma} argument of
+\code{MASS::mvrnorm()}; a correlation matrix therefore corresponds to unit
+marginal variances.}
 
 \item{group_col_name}{The name of the grouping/label column to be created in
 the final data frame.}

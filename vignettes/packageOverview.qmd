@@ -1,7 +1,6 @@
 ---
-title: "Helper Functions for Bayesian Kernel Machine Regression"
+title: "simBRKRdata:Helper Functions for Bayesian Kernel Machine Regression"
 subtitle: "Simulating Multivariate Environmental Exposure Data and Estimating Feature Selection Thresholds"
-date: "`r Sys.Date()`"
 author: "Kazi Tanvir Hasan, Dr. Gabriel Odom, Cristian Guerini, Dr. Zoran Bursac, Dr. Roberto Lucchini,  and Dr. Boubakari Ibrahimou"
 output:
   rmarkdown::html_document:
@@ -16,7 +15,7 @@ bibliography: references.bib
 
 # Abstract
 
-In environmental health studies, the relationship between multiple environmental exposures and health outcomes, such as cognitive development, is often investigated using complex datasets that exhibit non-normality. This paper introduces an R package designed to simulate multivariate environmental exposure data and estimate feature selection thresholds to aid in research to apply and extend the Bayesian Kernel Machine Regression (BKMR) methodology. The package enables researchers to generate data from multivariate normal and multivariate skewed Gamma distributions, common in environmental exposure research, and calculate multivariate statistical features such as mean, variance, skewness, shape, and rate vectors, and correlation matrices. This package also facilitates the calculation of a Posterior Inclusion Probability (PIP) threshold for feature selection in BKMR, offering an approach that accounts for non-normal data (based on the forthcoming work of @hasan2025). The effectiveness of the package is demonstrated through a real-world application using data from an adolescent environmental exposure study, where metal exposures are related to IQ scores.
+This paper presents an R package for simulating multivariate environmental exposure data and supporting feature selection in Bayesian Kernel Machine Regression (BKMR). The software generates correlated data from multivariate normal and skewed Gamma distributions, allowing users to characterize realistic non-normal exposure patterns. It calculates key multivariate distributional properties, including mean, variance, skewness, shape and rate parameters, and correlation matrices. The package also estimates Posterior Inclusion Probability thresholds for BKMR feature selection under non-normality. Its functionality is demonstrated using adolescent environmental exposure data to examine associations between metal mixtures and IQ, providing a reusable tool for environmental health and mixture research.
 
 ## Keywords
 
@@ -24,9 +23,9 @@ R package, Bayesian Kernel Machine Regression, multivariate simulation, feature 
 
 # Introduction
 
-Environmental exposure to metals such as Cadmium, Mercury, Arsenic, and Lead is linked to various adverse health outcomes, especially among children [@Horton2013]. In particular, these exposures may influence cognitive functions, with effects that often vary based on the concentration of metals in the environment [@Sanders2015; @trasande2011; @tyler2014; @tolins2014]. Research into these relationships frequently involves complex, multivariate datasets where environmental factors are correlated, and data distributions often exhibit skewness rather than normality [@bobb2014; @bobb2018; @hasan2024].
+Environmental exposure to metals such as Cadmium, Mercury, Arsenic, and Lead is linked to various adverse health outcomes, especially among children [@Horton2013]. In particular, these exposures may influence cognitive functions, with effects that often vary based on the concentration of metals in the environment [@Sanders2015; @trasande2011; @tyler2014; @tolins2014]. Research into these relationships frequently involves complex, multivariate datasets where environmental factors are correlated, and data distributions often exhibit skewness rather than normality [@bobb2014; @bobb2018; @tanvirhasan2025].
 
-The Bayesian Kernel Machine Regression (BKMR) model is a powerful method for identifying relevant environmental factors and interactions [@bobb2014; @bobb2018; @wilson2022; @devick2022; @gerwinn2010; @ibrahimou2024]. However, its effectiveness is typically constrained by its assumption of normality in the data, which is frequently violated in environmental health studies [@bobb2014; @bobb2018; @hasan2024; @Van2021]. To allow BKMR to flexibly handle multivariate skewed data, ongoing methodological innovation is needed, and synthetic data sets are a critical component of this research. To fill this need for realistic synthetic data sets, we have developed an R package that facilitates parametric bootstrap data simulation for multivariate environmental exposures. Further, this package includes computational results to estimate a Posterior Inclusion Probability (PIP) threshold which enables feature selection for BKMR via a hypothesis testing framework with controlled test size, which is particularly useful when data deviate from multivariate normality [@hasan2024]. In this chapter, we show how to estimate key statistical moments from a real data set which includes effects of metals exposures on children's IQ scores. Then, to facilitate future methodological innovation, we show how to use these moments as parameter estimates to simulate multiple synthetic environmental exposure data sets from multivariate normal and multivariate (skewed) Gamma distributions. Finally, for the real data analysis application examining exposure to mixture metals and IQ in a cohort of Italian children, we show how to apply our threshold equation and to use BKMR results for feature selection.
+The Bayesian Kernel Machine Regression (BKMR) model is a powerful method for identifying relevant environmental factors and interactions [@bobb2014; @bobb2018; @wilson2022; @devick2022; @gerwinn2010; @ibrahimou2024]. However, its effectiveness is typically constrained by its assumption of normality in the data, which is frequently violated in environmental health studies [@bobb2014; @bobb2018; @tanvirhasan2025; @Van2021]. To allow BKMR to flexibly handle multivariate skewed data, ongoing methodological innovation is needed, and synthetic data sets are a critical component of this research. To fill this need for realistic synthetic data sets, we have developed an R package that facilitates parametric bootstrap data simulation for multivariate environmental exposures. Further, this package includes computational results to estimate a Posterior Inclusion Probability (PIP) threshold which enables feature selection for BKMR via a hypothesis testing framework with controlled test size, which is particularly useful when data deviate from multivariate normality [@tanvirhasan2025]. In this chapter, we show how to estimate key statistical moments from a real data set which includes effects of metals exposures on children's IQ scores. Then, to facilitate future methodological innovation, we show how to use these moments as parameter estimates to simulate multiple synthetic environmental exposure data sets from multivariate normal and multivariate (skewed) Gamma distributions. Finally, for the real data analysis application examining exposure to mixture metals and IQ in a cohort of Italian children, we show how to apply our threshold equation and to use BKMR results for feature selection.
 
 # Materials and Methods
 
@@ -37,32 +36,30 @@ The package aims to provide a robust framework for simulating non-normal environ
 1.  Data Simulation: Functions for generating multivariate data from Normal, Gamma, and skewed Gamma distributions with the `simulate_group_data()` function; this generates data using multivariate Normal or Gamma distributions.
 2.  Statistical Parameters Estimation: The function `calculate_stats_gaussian()` calculates key statistical moments, including mean, variance, skewness, and correlation matrix, which are essential for understanding the underlying structure of the normally distributed data. This function computes the sample size, gamma distribution parameters (shape and rate), and Spearman correlation matrix for each group, based on the grouping column.
 3.  Data Transformation Functions:
-    -   Scaling by Standard Deviation or MAD: The `trans_ratio()` function scales data by either the standard deviation (SD) or the median absolute deviation (MAD).
-    -   Logarithmic and Root Transformations: The `trans_log()` function applies a logarithmic transformation to the data, and the `trans_root()` function allows for fractional root transformations, helping to manage skewed data.
+    - Scaling by Standard Deviation or MAD: The `trans_ratio()` function scales data by either the standard deviation (SD) or the median absolute deviation (MAD).
+    - Logarithmic and Root Transformations: The `trans_log()` function applies a logarithmic transformation to the data, and the `trans_root()` function allows for fractional root transformations, helping to manage skewed data.
 4.  Feature Selection Threshold Calculation: The PIP threshold for feature selection is computed using the `calculate_pip_threshold()` function. This function estimates the threshold based on a Four-Parameter Logistic Regression model (Richard's curve), which adjusts for variations in data and sample size[@richards1959]. The formula used to calculate the PIP threshold is:
 
-```{=tex}
 \begin{equation}
 y = A + \frac{K - A}{\left( C + e^{-\beta_1 x_1} \right)^{\beta_2 x_2}}.\label{eq1}
 \end{equation}
-```
+
 In this equation:
 
--   $y$: the 95th percentile of the PIP values $PIP_{q_{95}}$
--   $A$: Left asymptote, fixed at 0.
--   $K$: Right asymptote, bounded above by 1.
--   $C$: Scaling fit constant.
--   $\beta_1, \beta_2$: Midpoint shift parameters for CV and sample size.
--   $x_1$: Log-transformed CV $\log_2(\text{CV})$.
--   $x_2$: Log-transformed sample size $\log_{10} (\text{Sample Size})$.
+- $y$: the 95th percentile of the PIP values $PIP_{q_{95}}$
+- $A$: Left asymptote, fixed at 0.
+- $K$: Right asymptote, bounded above by 1.
+- $C$: Scaling fit constant.
+- $\beta_1, \beta_2$: Midpoint shift parameters for CV and sample size.
+- $x_1$: Log-transformed CV $\log_2(\text{CV})$.
+- $x_2$: Log-transformed sample size $\log_{10} (\text{Sample Size})$.
 
-A dynamic threshold function was derived from the logistic model to adjust thresholds based on CV and sample size[@hasan2024].
+A dynamic threshold function was derived from the logistic model to adjust thresholds based on CV and sample size[@tanvirhasan2025].
 
-```{=tex}
 \begin{equation}
     \text{Threshold} = \frac{1}{\left( 1.30460 + e^{-0.59867 \log_2 (\text{CV})} \right)^{0.43565 \log_{10} (\text{SampleSize})}}
 \end{equation}
-```
+
 ## Software Implementation
 
 The simBKMRdata software is implemented as an R package. It depends on the following packages: bkmr[@bkmr], fields[@fields], base[@base] and MASS[@MASS]. The R software and these required packages can be obtained from the CRAN website. Furthermore, daily builds of package simBKMRdata are provided on the CRAN website \[https://cran.r-project.org/web/packages/simBKMRdata/index.html\]. It has been published under GPL version 3. The source code is available on GitHub at \[https://github.com/khasa006/simBKMRdata\].
@@ -189,11 +186,11 @@ head(gamma_samples) %>%
   opt_table_outline()
 ```
 
-We account for the grouping variable column name with `group_col_name`, and we specify the Multivariate Gamma distribution by invoking the helper function `generate_mvGamma_data()`. This function can be repeatedly invoked to create hundreds of parametric bootstrap resamples to test future methodological developments. These simulation results are extensively discussed in @hasan2024 and @hasan2025.
+We account for the grouping variable column name with `group_col_name`, and we specify the Multivariate Gamma distribution by invoking the helper function `generate_mvGamma_data()`. This function can be repeatedly invoked to create hundreds of parametric bootstrap resamples to test future methodological developments. These simulation results are extensively discussed in @tanvirhasan2025 and @hasan2025.
 
 ## Dynamic Threshold Calculation
 
-As with any hypothesis-testing paradigm, we must set the threshold of rejection before we perform an experiment. For variable selection with BKMR, this is no different. In previous studies[@ibrahimou2024; @pesenti2023; @li2022; @zhang2019; @coker2018; @barbieri2004; @zheng2024], a static threshold 50% was used to delineate which exposures were statistically related to the outcome. However, as shown in @hasan2024 and @hasan2025, using a static threshold often results in either highly conservative (underpowered) tests, or tests that have a poorly controlled $\alpha$ size (greater than the expected 5%).
+As with any hypothesis-testing paradigm, we must set the threshold of rejection before we perform an experiment. For variable selection with BKMR, this is no different. In previous studies[@ibrahimou2024; @pesenti2023; @li2022; @zhang2019; @coker2018; @barbieri2004; @zheng2024], a static threshold 50% was used to delineate which exposures were statistically related to the outcome. However, as shown in @tanvirhasan2025 and @hasan2025, using a static threshold often results in either highly conservative (underpowered) tests, or tests that have a poorly controlled $\alpha$ size (greater than the expected 5%).
 
 To address the challenge of determining meaningful PIP thresholds under skewed data conditions, we applied the `calculate_pip_threshold()` function. This function dynamically estimates a threshold based on the dataset's coefficient of variation (CV) and sample size using an estimate for the Four-Parameter Logistic Regression model (Richard's Curve) described above.
 

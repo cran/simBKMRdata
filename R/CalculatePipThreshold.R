@@ -49,7 +49,7 @@
 #'
 #' @examples
 #' calculate_pip_threshold(absCV = 7.5, sampSize = 300)
-#' # should equal 0.6829892
+#' # should equal approximately 0.6549943
 #'
 calculate_pip_threshold <- function(
     y, absCV, sampSize,
